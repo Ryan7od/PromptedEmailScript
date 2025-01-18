@@ -28,12 +28,11 @@ def send_email(subject, body, recipients):
         for recipient in recipients:
             msg["To"] = recipient
             server.sendmail(smtp_username, recipient, msg.as_string())
+            del msg["To"]
             print(f"Email sent to {recipient}")
 
     except Exception as e:
         print("Error sending email:", str(e))
-    finally:
-        server.quit()
 
 
 def get_affirmation():
@@ -51,17 +50,22 @@ def get_affirmation():
         result = requests.post(API_URL, headers=headers, json={"inputs": prompt}).json()
         if "error" in result and "loading" in result["error"].lower():
             print (result)
-            wait_time = result[0]["estimated_time"].strip()
+            wait_time = result["estimated_time"]
             print(f"Attempt {attempt + 1}: Model is loading. Waiting {wait_time} seconds...")
             time.sleep(wait_time)
+        elif "error" in result:
+            print(result)
+            print("Unknown error, trying again one more time")
         else:
             break
 
     if isinstance(result, list) and "generated_text" in result[0]:
-        affirmation = result[0]["generated_text"].strip()
+        affirmation = result[0]["generated_text"]
         print(affirmation)
         if affirmation.startswith(prompt):
-            generated_text = affirmation[len(prompt) + 4:].strip()
+            prompt2 = "Please take the following input and format it so that it is only the inspirational message: \"" + affirmation + "\". Do not provide anything else, only the formatted message. Do not repeat the instruction."
+            middle = requests.post(API_URL, headers=headers, json={"inputs": prompt2}).json()[0]["generated_text"]
+            generated_text = middle[len(prompt2):].strip()
         else:
             generated_text = affirmation.strip()
         return generated_text
@@ -71,6 +75,8 @@ def get_affirmation():
 
 if __name__ == "__main__":
     recipients = os.getenv("EMAIL_LIST").split(',')
+    print(recipients)
     body = get_affirmation()
-    # send_email("Your Daily Affirmation", body, recipients)
+    print(body)
+    send_email("Your Daily Affirmation", body, recipients)
 
