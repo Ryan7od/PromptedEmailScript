@@ -73,10 +73,21 @@ def get_affirmation():
     print(result)
     return "Affirmation generation failed, my bad"
 
-if __name__ == "__main__":
+def lambda_handler(event, context):
+    execute()
+    print("Lambda triggered!")
+    return {
+        'statusCode': 200,
+        'body': 'Daily affirmation email sent successfully!'
+    }
+
+def execute():
     recipients = os.getenv("EMAIL_LIST").split(',')
     print(recipients)
     body = get_affirmation()
     print(body)
     send_email("Your Daily Affirmation", body, recipients)
+
+if __name__ == "__main__":
+    execute()
 
