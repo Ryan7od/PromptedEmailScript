@@ -41,7 +41,7 @@ def get_affirmation():
     API_URL = f"https://api-inference.huggingface.co/models/{model}"
 
     headers = {"Authorization": f"Bearer {HF_API_TOKEN}"}
-    prompt = os.getenv("AFFIRMATION_PROMPT") + str(random.randint(1,10000))
+    prompt = os.getenv("AFFIRMATION_PROMPT1") + str(random.randint(1,10000)) + os.getenv("AFFRIMATION_PROMPT2")
     print(prompt)
 
     max_retries = 5
@@ -63,12 +63,8 @@ def get_affirmation():
         affirmation = result[0]["generated_text"]
         print(affirmation)
         if affirmation.startswith(prompt):
-            prompt2 = "Please take the following input and format it so that it is only the inspirational message: \"" + affirmation + "\". Do not provide anything else, only the formatted message. Do not repeat the instruction."
-            middle = requests.post(API_URL, headers=headers, json={"inputs": prompt2}).json()[0]["generated_text"]
-            generated_text = middle[len(prompt2):].strip()
-        else:
-            generated_text = affirmation.strip()
-        return generated_text
+            return affirmation[len(prompt):].strip()
+        return affirmation
 
     print(result)
     return "Affirmation generation failed, my bad"
