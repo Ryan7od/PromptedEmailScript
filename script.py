@@ -37,17 +37,29 @@ def send_email(subject, body, recipients):
 
 def get_affirmation():
     HF_API_TOKEN = os.getenv("HUGGINGFACE_APIKEY")
+    #model = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    #model = "google/gemma-3-1b-it"
     model = "google/gemma-2-2b-it"
     API_URL = f"https://api-inference.huggingface.co/models/{model}"
 
     headers = {"Authorization": f"Bearer {HF_API_TOKEN}"}
-    prompt = os.getenv("AFFIRMATION_PROMPT1") + str(random.randint(1,10000)) + os.getenv("AFFRIMATION_PROMPT2")
+    prompt = os.getenv("PROMPT1") + str(random.randint(1,10000)) + os.getenv("PROMPT2")
     print(prompt)
 
     max_retries = 5
     result = None
     for attempt in range(max_retries):
-        result = requests.post(API_URL, headers=headers, json={"inputs": prompt}).json()
+        for backoff in [2, 4, 8, 16]:
+            result = requests.post(API_URL, headers=headers, json={"inputs": prompt})
+            if result.status_code == 503:
+                print(f"503—retrying in {backoff}s…")
+                time.sleep(backoff)
+                continue
+            result.raise_for_status()
+            result = result.json()
+            break
+        else:
+            raise RuntimeError("Model still unavailable after retries")
         if "error" in result and "loading" in result["error"].lower():
             print (result)
             wait_time = result["estimated_time"]

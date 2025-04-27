@@ -7,7 +7,7 @@ EMAIL_LIST= {Comma list of emails to send to}
 SMTP_USERNAME= {Sender email}
 SMTP_PASSWORD= {Sender SMTP password}
 
-AFFIRMATION_PROMPT1="Use the random seed "
-AFFRIMATION_PROMPT2=" to {rest of prompt}"
+PROMPT1="Use the random seed "
+PROMPT2=" to {rest of prompt}"
 
 HUGGINGFACE_APIKEY= {Huggingface API Key}
